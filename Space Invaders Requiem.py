@@ -1,12 +1,9 @@
 import sys
 import sqlite3
-import threading
 import time
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QWidget, QApplication, QLabel, QMainWindow, QPushButton, QLineEdit
+from PyQt5.QtWidgets import QWidget, QApplication
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import QSize
 import pygame
 import os
 import pygame_textinput
@@ -14,10 +11,10 @@ from random import randint
 
 # Импорт всех необходимых библиотек
 
-p_name = 'default_player'
+p_name = 'DEFAULT PLAYER'
 best_score = 0
 now_score = -10
-wave = 0
+wave = 10
 FPS = 60
 SIZE = W, H = 450, 750
 buttons = pygame.sprite.Group()
@@ -36,6 +33,7 @@ alive = [[False, False, False, False, False, False], [False, False, False, False
          [False, False, False, False, False, False]]
 pal = False
 mpal = False
+def_chance = 200
 
 
 class Leaderboard(QWidget):  # Окно с таблицей лидеров
@@ -111,6 +109,7 @@ def terminate():
 
 def start_screen():
     global status
+    status = 'm'
     def_music = 'data/8bit.mp3'
     rare_music = 'data/original_starman.mp3'
     attempt = randint(0, 10)
@@ -131,12 +130,12 @@ def start_screen():
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if 138 <= event.pos[0] <= 324 and 441 <= event.pos[1] <= 534 and status == 'm':
                     screen.blit(black_fon, (0, 0))
-                    return
+                    enter_name()
         pygame.display.flip()
         clock.tick(FPS)
 
 
-def enter_name(screen):
+def enter_name():
     pygame.display.set_caption('Введите имя:')
     global status, p_name, best_score, now_score
     status = 'e'
@@ -167,25 +166,26 @@ def enter_name(screen):
 
         pygame.display.update()
 
-    con = sqlite3.connect("leaderboard.sqlite")
+    con = sqlite3.connect("data/leaderboard.sqlite")
     cur = con.cursor()
     if textinput.get_text() != '':
-        p_name = textinput.get_text()
-    if p_name != 'default_player':
+        p_name = textinput.get_text().upper()
+    else:
+        p_name = 'DEFAULT PLAYER'
+    if p_name != 'DEFAULT PLAYER':
         result = []
         result = cur.execute("""SELECT Score FROM leaders 
         WHERE Name = '{}'""".format(str(p_name))).fetchone()  # Проверяем, существует ли такое имя в таблице
-        if result == None:
+        if result is None:
             cur.execute("""INSERT INTO leaders
             VALUES('{}', {}, '{}')""".format(str(p_name), '0', str(time.ctime(time.time()))))
             best_score = 0
         else:
             best_score = result[0]
     else:  # Если игрок оставил поле пустым, то называем его default_player и устанавливаем счёт на 0
-        result = []
         result = cur.execute("""SELECT Score FROM leaders 
         WHERE Name = '{}'""".format(str(p_name))).fetchone()
-        if result == None:
+        if result is None:
             cur.execute("""INSERT INTO leaders
             VALUES('{}', {}, '{}')""".format(str(p_name), '0', str(time.ctime(time.time()))))
             best_score = 0
@@ -194,12 +194,12 @@ def enter_name(screen):
             WHERE Name='{}'""".format(str(p_name))).fetchone()
             best_score = 0
     con.commit()  # Обновляем БД
-    return
+    game_start()
 
 
 def game_start():
-    global status, wave, now_score, pal
-    screen = pygame.display.set_mode((450, 750))
+    global status, wave, now_score, pal, mpal
+    pygame.display.set_caption('Space Invaders Rebuild')
     screen.fill((225, 225, 225))
     status = 'g'
     frame = 1
@@ -220,7 +220,11 @@ def game_start():
                 mobs_move()
             if wave == 5 and (frame == 1 or frame == 13 or frame == 25 or frame == 37 or frame == 49):
                 mobs_move()
-            if wave >= 6 and (frame == 1 or frame == 11 or frame == 21 or frame == 31 or frame == 41 or frame == 51):
+            if 6 <= wave < 10 and (frame == 1 or frame == 11 or frame == 21 or frame == 31 or frame == 41 or
+                                   frame == 51):
+                mobs_move()
+            if wave >= 10 and (frame == 1 or frame == 7 or frame == 13 or frame == 19 or frame == 25 or frame == 31 or
+                               frame == 37 or frame == 43 or frame == 49 or frame == 55):
                 mobs_move()
         else:
             frame = 0
@@ -231,11 +235,11 @@ def game_start():
         wave_str = 'Wave: {}'.format(wave)
         font = pygame.font.Font(None, 20)
 
-        sc_rendered = font.render(score_str, 1, pygame.Color('Yellow'))
+        sc_rendered = font.render(score_str, True, pygame.Color('Yellow'))
         sc_rect = sc_rendered.get_rect()
         screen.blit(sc_rendered, sc_rect)
 
-        wv_rendered = font.render(wave_str, 1, pygame.Color('Yellow'))
+        wv_rendered = font.render(wave_str, True, pygame.Color('Yellow'))
         wv_rect = wv_rendered.get_rect()
         wv_rect.y = 15
         screen.blit(wv_rendered, wv_rect)
@@ -257,10 +261,24 @@ def game_start():
             for j in range(len(alive[i])):
                 if alive[i][j]:
                     aa += 1
-        print(aa)
         if aa < 1:
             new_wave()
+        else:
+            check_lose()
         aa = 0
+        if not mpal:
+            tr = randint(1, def_chance)
+            if tr == 50:
+                mob_pif()
+        else:
+            mob_piu.rect.top += 3
+            if frame == 1:
+                mob_piu.image = bullet_im3
+            elif frame == 31:
+                mob_piu.image = bullet_im4
+            mob_bullets.draw(screen)
+            if mob_piu.rect.top > 750:
+                mpal = False
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -269,6 +287,10 @@ def game_start():
                 if event.key == pygame.K_SPACE:
                     ship_piu.rect.topleft = ship.rect.topleft
                     pal = True
+                if event.key == pygame.K_ESCAPE:
+                    print('через escape')
+                    you_lose()
+
         keys = pygame.key.get_pressed()
         if keys[pygame.K_RIGHT]:
             ship_move_right()
@@ -280,8 +302,85 @@ def game_start():
     return
 
 
+def mob_pif():
+    global alive, mpal
+    row = randint(1, 3)
+    n = randint(1, 6)
+    while True:
+        if alive[row - 1][n - 1]:
+            break
+        else:
+            row = randint(1, 3)
+            n = randint(1, 6)
+    if row == 1:
+        i = 1
+        for mob in r1mobs:
+            if i == n:
+                mob_piu.rect.midtop = mob.rect.midtop
+            i += 1
+    elif row == 2:
+        i = 1
+        for mob in r2mobs:
+            if i == n:
+                mob_piu.rect.midtop = mob.rect.midtop
+            i += 1
+    elif row == 3:
+        i = 1
+        for mob in r3mobs:
+            if i == n:
+                mob_piu.rect.midtop = mob.rect.midtop
+            i += 1
+    mpal = True
+
+
+def check_lose():
+    i = 0
+    for mob in r1mobs:
+        if alive[0][i]:
+            if mob.rect.top >= 686:
+                print('через чек')
+                you_lose()
+        i += 1
+    i = 0
+    for mob in r2mobs:
+        if alive[0][i]:
+            if mob.rect.top >= 686:
+                print('через чек')
+                you_lose()
+        i += 1
+    i = 0
+    for mob in r3mobs:
+        if alive[0][i]:
+            if mob.rect.top >= 686:
+                print('через чек')
+                you_lose()
+        i += 1
+
+
+def you_lose():
+    global best_score, now_score, alive, mpal
+    for i in range(len(alive)):
+        for j in range(len(alive[i])):
+            alive[i][j] = False
+    mpal = False
+    if best_score < now_score:
+        con = sqlite3.connect("data/leaderboard.sqlite")  # Обновление рекорда в таблице
+        cur = con.cursor()
+        cur.execute(
+            """UPDATE leaders SET Score={}, Date='{}' WHERE Name='{}'""".format(now_score, str(
+                time.ctime(time.time())), str(p_name), ))
+        con.commit()
+    if __name__ == '__main__':
+        app = QApplication(sys.argv)
+        lead = Leaderboard()
+        lead.upd()
+        lead.show()
+        start_screen()
+        sys.exit(app.exec())
+
+
 def check_hit():
-    global pal, ship_piu, now_score, alive
+    global pal, ship_piu, now_score, alive, mpal
     if pal:
         i = 0
         for mob in r1mobs:
@@ -313,18 +412,24 @@ def check_hit():
                         pal = False
                         now_score += 1
             i += 1
+        if mpal:
+            if 0 < abs((ship_piu.rect.left + 21) - (mob_piu.rect.left + 21)) < 6:
+                if 0 < abs((ship_piu.rect.top + 12) - (mob_piu.rect.top + 12)) < 25:
+                    pal = False
+                    mpal = False
+                    now_score += 10
 
 
 def ship_move_right():
     global ships
     if ship.rect[0] < 400:
-        ship.rect.left += 3
+        ship.rect.left += 5
 
 
 def ship_move_left():
     global ships
     if ship.rect[0] > 2:
-        ship.rect.left -= 3
+        ship.rect.left -= 5
 
 
 def new_wave():
@@ -332,6 +437,10 @@ def new_wave():
     global wave, best_score, now_score, row1sp1, row2sp1, row3sp1, tickn
     wave += 1
     tickn = 1
+
+    print('Волна пошла')
+
+    ship_piu.rect.topleft = (1000, 1000)
 
     ship.rect.topleft = (201, 702)
 
@@ -379,7 +488,7 @@ def new_wave():
             alive[i][j] = True
     now_score += 10
     if best_score < now_score:
-        con = sqlite3.connect("leaderboard.sqlite")  # Обновление рекорда в таблице
+        con = sqlite3.connect("data/leaderboard.sqlite")  # Обновление рекорда в таблице
         cur = con.cursor()
         cur.execute(
             """UPDATE leaders SET Score={}, Date='{}' WHERE Name='{}'""".format(now_score, str(time.ctime(time.time())),
@@ -493,180 +602,6 @@ def mobs_move():
         tickn = 1
 
 
-def bullet_move(self):  # Движение пули
-    global now_score
-    if self.game:
-        if self.piu_exist:
-            self.bullet.setPixmap(self.bullet_pixmap)
-            self.bullet.move(self.bullet.x(), self.bullet.y() - 16)
-            if self.mob11e:
-                if 0 < (self.bullet.x() + 22) - (self.mob11.x() + 16) < 32:
-                    if 0 < (self.bullet.y() + 12) - (self.mob11.y() + 32) < 25:  # Проверка попадания по мобам
-                        self.mob11e = False
-                        self.mob11.setPixmap(self.void_pixmap)
-                        self.piu_exist = False
-                        now_score += 4
-            if self.mob12e:
-                if 0 < (self.bullet.x() + 22) - (self.mob12.x() + 16) < 32:
-                    if 0 < (self.bullet.y() + 12) - (self.mob12.y() + 32) < 25:
-                        self.mob12e = False
-                        self.mob12.setPixmap(self.void_pixmap)
-                        self.piu_exist = False
-                        now_score += 4
-            if self.mob13e:
-                if 0 < (self.bullet.x() + 22) - (self.mob13.x() + 16) < 32:
-                    if 0 < (self.bullet.y() + 12) - (self.mob13.y() + 32) < 25:
-                        self.mob13e = False
-                        self.mob13.setPixmap(self.void_pixmap)
-                        self.piu_exist = False
-                        now_score += 4
-            if self.mob14e:
-                if 0 < (self.bullet.x() + 22) - (self.mob14.x() + 16) < 32:
-                    if 0 < (self.bullet.y() + 12) - (self.mob14.y() + 32) < 25:
-                        self.mob14e = False
-                        self.mob14.setPixmap(self.void_pixmap)
-                        self.piu_exist = False
-                        now_score += 4
-            if self.mob15e:
-                if 0 < (self.bullet.x() + 22) - (self.mob15.x() + 16) < 32:
-                    if 0 < (self.bullet.y() + 12) - (self.mob15.y() + 32) < 25:
-                        self.mob15e = False
-                        self.mob15.setPixmap(self.void_pixmap)
-                        self.piu_exist = False
-                        now_score += 4
-            if self.mob16e:
-                if 0 < (self.bullet.x() + 22) - (self.mob16.x() + 16) < 32:
-                    if 0 < (self.bullet.y() + 12) - (self.mob16.y() + 32) < 25:
-                        self.mob16e = False
-                        self.mob16.setPixmap(self.void_pixmap)
-                        self.piu_exist = False
-                        now_score += 4
-
-            if self.mob21e:
-                if 0 < (self.bullet.x() + 22) - (self.mob21.x() + 16) < 32:
-                    if 0 < (self.bullet.y() + 12) - (self.mob21.y() + 32) < 25:
-                        self.mob21e = False
-                        self.mob21.setPixmap(self.void_pixmap)
-                        self.piu_exist = False
-                        now_score += 3
-            if self.mob22e:
-                if 0 < (self.bullet.x() + 22) - (self.mob22.x() + 16) < 32:
-                    if 0 < (self.bullet.y() + 12) - (self.mob22.y() + 32) < 25:
-                        self.mob22e = False
-                        self.mob22.setPixmap(self.void_pixmap)
-                        self.piu_exist = False
-                        now_score += 3
-            if self.mob23e:
-                if 0 < (self.bullet.x() + 22) - (self.mob23.x() + 16) < 32:
-                    if 0 < (self.bullet.y() + 12) - (self.mob23.y() + 32) < 25:
-                        self.mob23e = False
-                        self.mob23.setPixmap(self.void_pixmap)
-                        self.piu_exist = False
-                        now_score += 3
-            if self.mob24e:
-                if 0 < (self.bullet.x() + 22) - (self.mob24.x() + 16) < 32:
-                    if 0 < (self.bullet.y() + 12) - (self.mob24.y() + 32) < 25:
-                        self.mob24e = False
-                        self.mob24.setPixmap(self.void_pixmap)
-                        self.piu_exist = False
-                        now_score += 3
-            if self.mob25e:
-                if 0 < (self.bullet.x() + 22) - (self.mob25.x() + 16) < 32:
-                    if 0 < (self.bullet.y() + 12) - (self.mob25.y() + 32) < 25:
-                        self.mob25e = False
-                        self.mob25.setPixmap(self.void_pixmap)
-                        self.piu_exist = False
-                        now_score += 3
-            if self.mob26e:
-                if 0 < (self.bullet.x() + 22) - (self.mob26.x() + 16) < 32:
-                    if 0 < (self.bullet.y() + 12) - (self.mob26.y() + 32) < 25:
-                        self.mob26e = False
-                        self.mob26.setPixmap(self.void_pixmap)
-                        self.piu_exist = False
-                        now_score += 3
-
-            if self.mob31e:
-                if 0 < (self.bullet.x() + 22) - (self.mob31.x() + 16) < 32:
-                    if 0 < (self.bullet.y() + 12) - (self.mob31.y() + 32) < 25:
-                        self.mob31e = False
-                        self.mob31.setPixmap(self.void_pixmap)
-                        self.piu_exist = False
-                        now_score += 2
-            if self.mob32e:
-                if 0 < (self.bullet.x() + 22) - (self.mob32.x() + 16) < 32:
-                    if 0 < (self.bullet.y() + 12) - (self.mob32.y() + 32) < 25:
-                        self.mob32e = False
-                        self.mob32.setPixmap(self.void_pixmap)
-                        self.piu_exist = False
-                        now_score += 2
-            if self.mob33e:
-                if 0 < (self.bullet.x() + 22) - (self.mob33.x() + 16) < 32:
-                    if 0 < (self.bullet.y() + 12) - (self.mob33.y() + 32) < 25:
-                        self.mob33e = False
-                        self.mob33.setPixmap(self.void_pixmap)
-                        self.piu_exist = False
-                        now_score += 2
-            if self.mob34e:
-                if 0 < (self.bullet.x() + 22) - (self.mob34.x() + 16) < 32:
-                    if 0 < (self.bullet.y() + 12) - (self.mob34.y() + 32) < 25:
-                        self.mob34e = False
-                        self.mob34.setPixmap(self.void_pixmap)
-                        self.piu_exist = False
-                        now_score += 2
-            if self.mob35e:
-                if 0 < (self.bullet.x() + 22) - (self.mob35.x() + 16) < 32:
-                    if 0 < (self.bullet.y() + 12) - (self.mob35.y() + 32) < 25:
-                        self.mob35e = False
-                        self.mob35.setPixmap(self.void_pixmap)
-                        self.piu_exist = False
-                        now_score += 2
-            if self.mob36e:
-                if 0 < (self.bullet.x() + 22) - (self.mob36.x() + 16) < 32:
-                    if 0 < (self.bullet.y() + 12) - (self.mob36.y() + 32) < 25:
-                        self.mob36e = False
-                        self.mob36.setPixmap(self.void_pixmap)
-                        self.piu_exist = False
-                        now_score += 2
-
-            if self.bullet.y() >= -48:
-                self.piu_t = threading.Timer(0.2, self.bullet_move)
-                self.piu_t.start()
-            else:
-                self.piu_t.cancel()
-                self.piu_exist = False
-        else:
-            self.bullet.setPixmap(self.void_pixmap)
-
-
-# Вызов новой волны если все мобы убиты
-
-def check_lose(self):  # проверка проигрыша
-    global p_name, best_score, now_score
-    if (self.mob11.y() >= 736 or self.mob12.y() >= 736 or self.mob13.y() >= 736 or
-        self.mob14.y() >= 736 or self.mob15.y() >= 736 or self.mob16.y() >= 736
-        or self.mob21.y() >= 736 or self.mob22.y() >= 736 or self.mob23.y() >= 736
-        or self.mob24.y() >= 736 or self.mob25.y() >= 736 or self.mob26.y() >= 736
-        or self.mob31.y() >= 736 or self.mob32.y() >= 736 or self.mob33.y() >= 736
-        or self.mob34.y() >= 736 or self.mob35.y() >= 736 or self.mob36.y() >= 736) and self.game:
-        if best_score < now_score:  # Перезапись рекорда в таблице если этот рекорд побит
-            self.con = sqlite3.connect("leaderboard.sqlite")
-            cur = self.con.cursor()
-            cur.execute("""UPDATE leaders SET Score={}, Date='{}' WHERE Name='{}'""".format(now_score, str(
-                time.ctime(time.time())), str(p_name), ))
-            self.con.commit()
-            self.game = False
-        self.l.upd()  # Обновление окна с таблицей
-        self.l.show()  # и вывод его на экран
-
-
-def cl(self):
-    self.l.close()
-    self.dialog.close()
-    self.close()
-    if self.play_obj.is_playing():
-        self.play_obj = wave_obj.stop()
-
-
 pygame.init()
 pygame.font.init()
 pygame.mixer.init()
@@ -756,15 +691,4 @@ mob_piu.rect = mob_piu.image.get_rect()
 ship_piu.image = bullet_im1
 ship_piu.rect = ship.image.get_rect()
 
-# if __name__ == '__main__':
-# app = QApplication(sys.argv)
-# l = Leaderboard()
-# l.upd()
-# l.show()
-# sys.exit(app.exec())
-
 start_screen()
-enter_name(screen)
-
-game_start()
-terminate()
