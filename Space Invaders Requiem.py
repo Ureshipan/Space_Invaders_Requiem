@@ -33,7 +33,7 @@ alive = [[False, False, False, False, False, False], [False, False, False, False
          [False, False, False, False, False, False]]
 pal = False
 mpal = False
-def_chance = 200
+def_chance = 201
 
 
 class Leaderboard(QWidget):  # Окно с таблицей лидеров
@@ -73,7 +73,7 @@ class Leaderboard(QWidget):  # Окно с таблицей лидеров
 
     def upd(self):
         self.table.setHorizontalHeaderLabels(self.columns)  # Обновление и добавление данных в в выводимую таблицу
-        self.con = sqlite3.connect("leaderboard.sqlite")
+        self.con = sqlite3.connect("data/leaderboard.sqlite")
         cur = self.con.cursor()
         que = "SELECT * FROM leaders ORDER BY Score DESC"
         result = cur.execute(que).fetchall()
@@ -139,7 +139,6 @@ def enter_name():
     pygame.display.set_caption('Введите имя:')
     global status, p_name, best_score, now_score
     status = 'e'
-    screen = pygame.display.set_mode((450, 750))
     name_fon_im = load_image('enter_name.png')
     name_fon = pygame.sprite.Sprite(fons)
     name_fon.image = name_fon_im
@@ -173,7 +172,6 @@ def enter_name():
     else:
         p_name = 'DEFAULT PLAYER'
     if p_name != 'DEFAULT PLAYER':
-        result = []
         result = cur.execute("""SELECT Score FROM leaders 
         WHERE Name = '{}'""".format(str(p_name))).fetchone()  # Проверяем, существует ли такое имя в таблице
         if result is None:
@@ -198,12 +196,13 @@ def enter_name():
 
 
 def game_start():
-    global status, wave, now_score, pal, mpal
+    global status, wave, now_score, pal, mpal, def_chance
     pygame.display.set_caption('Space Invaders Rebuild')
     screen.fill((225, 225, 225))
     status = 'g'
     frame = 1
     aa = 0
+    def_chance = 201
 
     running = True
 
@@ -272,6 +271,7 @@ def game_start():
                 mob_pif()
         else:
             mob_piu.rect.top += 3
+            check_mob_hit()
             if frame == 1:
                 mob_piu.image = bullet_im3
             elif frame == 31:
@@ -288,7 +288,6 @@ def game_start():
                     ship_piu.rect.topleft = ship.rect.topleft
                     pal = True
                 if event.key == pygame.K_ESCAPE:
-                    print('через escape')
                     you_lose()
 
         keys = pygame.key.get_pressed()
@@ -331,6 +330,11 @@ def mob_pif():
                 mob_piu.rect.midtop = mob.rect.midtop
             i += 1
     mpal = True
+
+
+def check_mob_hit():
+    if mob_piu.rect.top > 690 and abs(ship.rect.right - mob_piu.rect.right) < 21:
+        you_lose()
 
 
 def check_lose():
@@ -433,10 +437,12 @@ def ship_move_left():
 
 
 def new_wave():
-    global alive, r1mobs, r2mobs, r3mobs
+    global alive, r1mobs, r2mobs, r3mobs, def_chance
     global wave, best_score, now_score, row1sp1, row2sp1, row3sp1, tickn
     wave += 1
     tickn = 1
+    if def_chance > 10:
+        def_chance - 20
 
     print('Волна пошла')
 
