@@ -21,7 +21,9 @@ wave = 0
 FPS = 60
 SIZE = W, H = 450, 750
 buttons = pygame.sprite.Group()
-mobs = pygame.sprite.Group()
+r1mobs = pygame.sprite.Group()
+r2mobs = pygame.sprite.Group()
+r3mobs = pygame.sprite.Group()
 ships = pygame.sprite.Group()
 fons = pygame.sprite.Group()
 ship_bullets = pygame.sprite.Group()
@@ -201,7 +203,7 @@ def game_start():
     screen.fill((225, 225, 225))
     status = 'g'
     frame = 1
-    aa = False
+    aa = 0
 
     running = True
 
@@ -216,7 +218,9 @@ def game_start():
                 mobs_move()
             if wave == 4 and (frame == 1 or frame == 16 or frame == 21 or frame == 36):
                 mobs_move()
-            if wave >= 5 and (frame == 1 or frame == 13 or frame == 25 or frame == 37 or frame == 49):
+            if wave == 5 and (frame == 1 or frame == 13 or frame == 25 or frame == 37 or frame == 49):
+                mobs_move()
+            if wave >= 6 and (frame == 1 or frame == 11 or frame == 21 or frame == 31 or frame == 41 or frame == 51):
                 mobs_move()
         else:
             frame = 0
@@ -236,7 +240,9 @@ def game_start():
         wv_rect.y = 15
         screen.blit(wv_rendered, wv_rect)
 
-        mobs.draw(screen)
+        r1mobs.draw(screen)
+        r2mobs.draw(screen)
+        r3mobs.draw(screen)
         if pal:
             ship_bullets.draw(screen)
             ship_piu.rect.top -= 5
@@ -248,14 +254,13 @@ def game_start():
         ships.draw(screen)
 
         for i in range(len(alive)):
-            if aa:
-                break
             for j in range(len(alive[i])):
                 if alive[i][j]:
-                    aa = True
-                    break
-        if not aa:
+                    aa += 1
+        print(aa)
+        if aa < 1:
             new_wave()
+        aa = 0
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -276,7 +281,38 @@ def game_start():
 
 
 def check_hit():
-    print('Done')
+    global pal, ship_piu, now_score, alive
+    if pal:
+        i = 0
+        for mob in r1mobs:
+            if alive[0][i]:
+                if 0 < (ship_piu.rect.left + 22) - (mob.rect.left + 16) < 32:
+                    if 0 < (ship_piu.rect.top + 12) - (mob.rect.top + 32) < 25:
+                        mob.image = ded
+                        alive[0][i] = False
+                        pal = False
+                        now_score += 3
+            i += 1
+        i = 0
+        for mob in r2mobs:
+            if alive[1][i]:
+                if 0 < (ship_piu.rect.left + 22) - (mob.rect.left + 16) < 46:
+                    if 0 < (ship_piu.rect.top + 12) - (mob.rect.top + 32) < 25:
+                        mob.image = ded
+                        alive[1][i] = False
+                        pal = False
+                        now_score += 2
+            i += 1
+        i = 0
+        for mob in r3mobs:
+            if alive[2][i]:
+                if 0 < (ship_piu.rect.left + 22) - (mob.rect.left + 16) < 50:
+                    if 0 < (ship_piu.rect.top + 12) - (mob.rect.top + 32) < 25:
+                        mob.image = ded
+                        alive[2][i] = False
+                        pal = False
+                        now_score += 1
+            i += 1
 
 
 def ship_move_right():
@@ -292,7 +328,7 @@ def ship_move_left():
 
 
 def new_wave():
-    global alive, mobs
+    global alive, r1mobs, r2mobs, r3mobs
     global wave, best_score, now_score, row1sp1, row2sp1, row3sp1, tickn
     wave += 1
     tickn = 1
@@ -341,7 +377,6 @@ def new_wave():
     for i in range(len(alive)):
         for j in range(len(alive[i])):
             alive[i][j] = True
-    mobs.draw(screen)
     now_score += 10
     if best_score < now_score:
         con = sqlite3.connect("leaderboard.sqlite")  # Обновление рекорда в таблице
@@ -353,286 +388,108 @@ def new_wave():
 
 
 def mobs_move():
-    global tickn, mobs
+    global tickn, r1mobs, r2mobs, r3mobs
     if tickn == 1:
-        if alive[0][0]:
-            mob11.rect.topleft = (mob11.rect.left + step, mob11.rect.top)
-        if alive[0][1]:
-            mob12.rect.topleft = (mob12.rect.left + step, mob12.rect.top)
-        if alive[0][2]:
-            mob13.rect.topleft = (mob13.rect.left + step, mob13.rect.top)
-        if alive[0][3]:
-            mob14.rect.topleft = (mob14.rect.left + step, mob14.rect.top)
-        if alive[0][4]:
-            mob15.rect.topleft = (mob15.rect.left + step, mob15.rect.top)
-        if alive[0][5]:
-            mob16.rect.topleft = (mob16.rect.left + step, mob16.rect.top)
-        mob11.image = row1sp2
-        mob12.image = row1sp2
-        mob13.image = row1sp2
-        mob14.image = row1sp2
-        mob15.image = row1sp2
-        mob16.image = row1sp2
-
-        if alive[1][0]:
-            mob21.rect.topleft = (mob21.rect.left - step, mob21.rect.top)
-        if alive[1][1]:
-            mob22.rect.topleft = (mob22.rect.left - step, mob22.rect.top)
-        if alive[1][2]:
-            mob23.rect.topleft = (mob23.rect.left - step, mob23.rect.top)
-        if alive[1][3]:
-            mob24.rect.topleft = (mob24.rect.left - step, mob24.rect.top)
-        if alive[1][4]:
-            mob25.rect.topleft = (mob25.rect.left - step, mob25.rect.top)
-        if alive[1][5]:
-            mob26.rect.topleft = (mob26.rect.left - step, mob26.rect.top)
-        mob21.image = row2sp2
-        mob22.image = row2sp2
-        mob23.image = row2sp2
-        mob24.image = row2sp2
-        mob25.image = row2sp2
-        mob26.image = row2sp2
-
-        if alive[2][0]:
-            mob31.rect.topleft = (mob31.rect.left + step, mob31.rect.top)
-        if alive[2][1]:
-            mob32.rect.topleft = (mob32.rect.left + step, mob32.rect.top)
-        if alive[2][2]:
-            mob33.rect.topleft = (mob33.rect.left + step, mob33.rect.top)
-        if alive[2][3]:
-            mob34.rect.topleft = (mob34.rect.left + step, mob34.rect.top)
-        if alive[2][4]:
-            mob35.rect.topleft = (mob35.rect.left + step, mob35.rect.top)
-        if alive[2][5]:
-            mob36.rect.topleft = (mob36.rect.left + step, mob36.rect.top)
-        mob31.image = row3sp2
-        mob32.image = row3sp2
-        mob33.image = row3sp2
-        mob34.image = row3sp2
-        mob35.image = row3sp2
-        mob36.image = row3sp2
-
+        i = 0
+        for mob in r1mobs:
+            if alive[0][i]:
+                mob.rect.topleft = (mob.rect.left + step, mob.rect.top)
+                mob.image = row1sp2
+            i += 1
+        i = 0
+        for mob in r2mobs:
+            if alive[1][i]:
+                mob.rect.topleft = (mob.rect.left - step, mob.rect.top)
+                mob.image = row2sp2
+            i += 1
+        i = 0
+        for mob in r3mobs:
+            if alive[2][i]:
+                mob.rect.topleft = (mob.rect.left + step, mob.rect.top)
+                mob.image = row3sp2
+            i += 1
         tickn = 2
 
     elif tickn == 2:
-        if alive[0][0]:
-            mob11.rect.topleft = (mob11.rect.left - step, mob11.rect.top)
-        if alive[0][1]:
-            mob12.rect.topleft = (mob12.rect.left - step, mob12.rect.top)
-        if alive[0][2]:
-            mob13.rect.topleft = (mob13.rect.left - step, mob13.rect.top)
-        if alive[0][3]:
-            mob14.rect.topleft = (mob14.rect.left - step, mob14.rect.top)
-        if alive[0][4]:
-            mob15.rect.topleft = (mob15.rect.left - step, mob15.rect.top)
-        if alive[0][5]:
-            mob16.rect.topleft = (mob16.rect.left - step, mob16.rect.top)
-        mob11.image = row1sp1
-        mob12.image = row1sp1
-        mob13.image = row1sp1
-        mob14.image = row1sp1
-        mob15.image = row1sp1
-        mob16.image = row1sp1
-
-        if alive[1][0]:
-            mob21.rect.topleft = (mob21.rect.left + step, mob21.rect.top)
-        if alive[1][1]:
-            mob22.rect.topleft = (mob22.rect.left + step, mob22.rect.top)
-        if alive[1][2]:
-            mob23.rect.topleft = (mob23.rect.left + step, mob23.rect.top)
-        if alive[1][3]:
-            mob24.rect.topleft = (mob24.rect.left + step, mob24.rect.top)
-        if alive[1][4]:
-            mob25.rect.topleft = (mob25.rect.left + step, mob25.rect.top)
-        if alive[1][5]:
-            mob26.rect.topleft = (mob26.rect.left + step, mob26.rect.top)
-        mob21.image = row2sp1
-        mob22.image = row2sp1
-        mob23.image = row2sp1
-        mob24.image = row2sp1
-        mob25.image = row2sp1
-        mob26.image = row2sp1
-
-        if alive[2][0]:
-            mob31.rect.topleft = (mob31.rect.left - step, mob31.rect.top)
-        if alive[2][1]:
-            mob32.rect.topleft = (mob32.rect.left - step, mob32.rect.top)
-        if alive[2][2]:
-            mob33.rect.topleft = (mob33.rect.left - step, mob33.rect.top)
-        if alive[2][3]:
-            mob34.rect.topleft = (mob34.rect.left - step, mob34.rect.top)
-        if alive[2][4]:
-            mob35.rect.topleft = (mob35.rect.left - step, mob35.rect.top)
-        if alive[2][5]:
-            mob36.rect.topleft = (mob36.rect.left - step, mob36.rect.top)
-        mob31.image = row3sp1
-        mob32.image = row3sp1
-        mob33.image = row3sp1
-        mob34.image = row3sp1
-        mob35.image = row3sp1
-        mob36.image = row3sp1
-
+        i = 0
+        for mob in r1mobs:
+            if alive[0][i]:
+                mob.rect.topleft = (mob.rect.left - step, mob.rect.top)
+                mob.image = row1sp1
+            i += 1
+        i = 0
+        for mob in r2mobs:
+            if alive[1][i]:
+                mob.rect.topleft = (mob.rect.left + step, mob.rect.top)
+                mob.image = row2sp1
+            i += 1
+        i = 0
+        for mob in r3mobs:
+            if alive[2][i]:
+                mob.rect.topleft = (mob.rect.left - step, mob.rect.top)
+                mob.image = row3sp1
+            i += 1
         tickn = 3
 
     elif tickn == 3:
-        if alive[0][0]:
-            mob11.rect.topleft = (mob11.rect.left - step, mob11.rect.top)
-        if alive[0][1]:
-            mob12.rect.topleft = (mob12.rect.left - step, mob12.rect.top)
-        if alive[0][2]:
-            mob13.rect.topleft = (mob13.rect.left - step, mob13.rect.top)
-        if alive[0][3]:
-            mob14.rect.topleft = (mob14.rect.left - step, mob14.rect.top)
-        if alive[0][4]:
-            mob15.rect.topleft = (mob15.rect.left - step, mob15.rect.top)
-        if alive[0][5]:
-            mob16.rect.topleft = (mob16.rect.left - step, mob16.rect.top)
-        mob11.image = row1sp2
-        mob12.image = row1sp2
-        mob13.image = row1sp2
-        mob14.image = row1sp2
-        mob15.image = row1sp2
-        mob16.image = row1sp2
-
-        if alive[1][0]:
-            mob21.rect.topleft = (mob21.rect.left + step, mob21.rect.top)
-        if alive[1][1]:
-            mob22.rect.topleft = (mob22.rect.left + step, mob22.rect.top)
-        if alive[1][2]:
-            mob23.rect.topleft = (mob23.rect.left + step, mob23.rect.top)
-        if alive[1][3]:
-            mob24.rect.topleft = (mob24.rect.left + step, mob24.rect.top)
-        if alive[1][4]:
-            mob25.rect.topleft = (mob25.rect.left + step, mob25.rect.top)
-        if alive[1][5]:
-            mob26.rect.topleft = (mob26.rect.left + step, mob26.rect.top)
-        mob21.image = row2sp2
-        mob22.image = row2sp2
-        mob23.image = row2sp2
-        mob24.image = row2sp2
-        mob25.image = row2sp2
-        mob26.image = row2sp2
-
-        if alive[2][0]:
-            mob31.rect.topleft = (mob31.rect.left - step, mob31.rect.top)
-        if alive[2][1]:
-            mob32.rect.topleft = (mob32.rect.left - step, mob32.rect.top)
-        if alive[2][2]:
-            mob33.rect.topleft = (mob33.rect.left - step, mob33.rect.top)
-        if alive[2][3]:
-            mob34.rect.topleft = (mob34.rect.left - step, mob34.rect.top)
-        if alive[2][4]:
-            mob35.rect.topleft = (mob35.rect.left - step, mob35.rect.top)
-        if alive[2][5]:
-            mob36.rect.topleft = (mob36.rect.left - step, mob36.rect.top)
-        mob31.image = row3sp2
-        mob32.image = row3sp2
-        mob33.image = row3sp2
-        mob34.image = row3sp2
-        mob35.image = row3sp2
-        mob36.image = row3sp2
-
+        i = 0
+        for mob in r1mobs:
+            if alive[0][i]:
+                mob.rect.topleft = (mob.rect.left - step, mob.rect.top)
+                mob.image = row1sp2
+            i += 1
+        i = 0
+        for mob in r2mobs:
+            if alive[1][i]:
+                mob.rect.topleft = (mob.rect.left + step, mob.rect.top)
+                mob.image = row2sp2
+            i += 1
+        i = 0
+        for mob in r3mobs:
+            if alive[2][i]:
+                mob.rect.topleft = (mob.rect.left - step, mob.rect.top)
+                mob.image = row3sp2
+            i += 1
         tickn = 4
 
     elif tickn == 4:
-        if alive[0][0]:
-            mob11.rect.topleft = (mob11.rect.left + step, mob11.rect.top)
-        if alive[0][1]:
-            mob12.rect.topleft = (mob12.rect.left + step, mob12.rect.top)
-        if alive[0][2]:
-            mob13.rect.topleft = (mob13.rect.left + step, mob13.rect.top)
-        if alive[0][3]:
-            mob14.rect.topleft = (mob14.rect.left + step, mob14.rect.top)
-        if alive[0][4]:
-            mob15.rect.topleft = (mob15.rect.left + step, mob15.rect.top)
-        if alive[0][5]:
-            mob16.rect.topleft = (mob16.rect.left + step, mob16.rect.top)
-        mob11.image = row1sp1
-        mob12.image = row1sp1
-        mob13.image = row1sp1
-        mob14.image = row1sp1
-        mob15.image = row1sp1
-        mob16.image = row1sp1
-
-        if alive[1][0]:
-            mob21.rect.topleft = (mob21.rect.left - step, mob21.rect.top)
-        if alive[1][1]:
-            mob22.rect.topleft = (mob22.rect.left - step, mob22.rect.top)
-        if alive[1][2]:
-            mob23.rect.topleft = (mob23.rect.left - step, mob23.rect.top)
-        if alive[1][3]:
-            mob24.rect.topleft = (mob24.rect.left - step, mob24.rect.top)
-        if alive[1][4]:
-            mob25.rect.topleft = (mob25.rect.left - step, mob25.rect.top)
-        if alive[1][5]:
-            mob26.rect.topleft = (mob26.rect.left - step, mob26.rect.top)
-        mob21.image = row2sp1
-        mob22.image = row2sp1
-        mob23.image = row2sp1
-        mob24.image = row2sp1
-        mob25.image = row2sp1
-        mob26.image = row2sp1
-
-        if alive[2][0]:
-            mob31.rect.topleft = (mob31.rect.left + step, mob31.rect.top)
-        if alive[2][1]:
-            mob32.rect.topleft = (mob32.rect.left + step, mob32.rect.top)
-        if alive[2][2]:
-            mob33.rect.topleft = (mob33.rect.left + step, mob33.rect.top)
-        if alive[2][3]:
-            mob34.rect.topleft = (mob34.rect.left + step, mob34.rect.top)
-        if alive[2][4]:
-            mob35.rect.topleft = (mob35.rect.left + step, mob35.rect.top)
-        if alive[2][5]:
-            mob36.rect.topleft = (mob36.rect.left + step, mob36.rect.top)
-        mob31.image = row3sp1
-        mob32.image = row3sp1
-        mob33.image = row3sp1
-        mob34.image = row3sp1
-        mob35.image = row3sp1
-        mob36.image = row3sp1
+        i = 0
+        for mob in r1mobs:
+            if alive[0][i]:
+                mob.rect.topleft = (mob.rect.left + step, mob.rect.top)
+                mob.image = row1sp1
+            i += 1
+        i = 0
+        for mob in r2mobs:
+            if alive[1][i]:
+                mob.rect.topleft = (mob.rect.left - step, mob.rect.top)
+                mob.image = row2sp1
+            i += 1
+        i = 0
+        for mob in r3mobs:
+            if alive[2][i]:
+                mob.rect.topleft = (mob.rect.left + step, mob.rect.top)
+                mob.image = row3sp1
+            i += 1
 
         tickn = 5
 
     elif tickn == 5:
-        if alive[0][0]:
-            mob11.rect.topleft = (mob11.rect.left, mob11.rect.top + vstep)
-        if alive[0][1]:
-            mob12.rect.topleft = (mob12.rect.left, mob12.rect.top + vstep)
-        if alive[0][2]:
-            mob13.rect.topleft = (mob13.rect.left, mob13.rect.top + vstep)
-        if alive[0][3]:
-            mob14.rect.topleft = (mob14.rect.left, mob14.rect.top + vstep)
-        if alive[0][4]:
-            mob15.rect.topleft = (mob15.rect.left, mob15.rect.top + vstep)
-        if alive[0][5]:
-            mob16.rect.topleft = (mob16.rect.left, mob16.rect.top + vstep)
-
-        if alive[1][0]:
-            mob21.rect.topleft = (mob21.rect.left, mob21.rect.top + vstep)
-        if alive[1][1]:
-            mob22.rect.topleft = (mob22.rect.left, mob22.rect.top + vstep)
-        if alive[1][2]:
-            mob23.rect.topleft = (mob23.rect.left, mob23.rect.top + vstep)
-        if alive[1][3]:
-            mob24.rect.topleft = (mob24.rect.left, mob24.rect.top + vstep)
-        if alive[1][4]:
-            mob25.rect.topleft = (mob25.rect.left, mob25.rect.top + vstep)
-        if alive[1][5]:
-            mob26.rect.topleft = (mob26.rect.left, mob26.rect.top + vstep)
-
-        if alive[2][0]:
-            mob31.rect.topleft = (mob31.rect.left, mob31.rect.top + vstep)
-        if alive[2][1]:
-            mob32.rect.topleft = (mob32.rect.left, mob32.rect.top + vstep)
-        if alive[2][2]:
-            mob33.rect.topleft = (mob33.rect.left, mob33.rect.top + vstep)
-        if alive[2][3]:
-            mob34.rect.topleft = (mob34.rect.left, mob34.rect.top + vstep)
-        if alive[2][4]:
-            mob35.rect.topleft = (mob35.rect.left, mob35.rect.top + vstep)
-        if alive[2][5]:
-            mob36.rect.topleft = (mob36.rect.left, mob36.rect.top + vstep)
+        i = 0
+        for mob in r1mobs:
+            if alive[0][i]:
+                mob.rect.topleft = (mob.rect.left, mob.rect.top + vstep)
+            i += 1
+        i = 0
+        for mob in r2mobs:
+            if alive[1][i]:
+                mob.rect.topleft = (mob.rect.left, mob.rect.top + vstep)
+            i += 1
+        i = 0
+        for mob in r3mobs:
+            if alive[2][i]:
+                mob.rect.topleft = (mob.rect.left, mob.rect.top + vstep)
+            i += 1
         tickn = 1
 
 
@@ -820,12 +677,12 @@ clock = pygame.time.Clock()
 
 row1sp1 = load_image('mob1.png')
 row1sp2 = load_image('mob12.png')
-mob11 = pygame.sprite.Sprite(mobs)
-mob12 = pygame.sprite.Sprite(mobs)
-mob13 = pygame.sprite.Sprite(mobs)
-mob14 = pygame.sprite.Sprite(mobs)
-mob15 = pygame.sprite.Sprite(mobs)
-mob16 = pygame.sprite.Sprite(mobs)
+mob11 = pygame.sprite.Sprite(r1mobs)
+mob12 = pygame.sprite.Sprite(r1mobs)
+mob13 = pygame.sprite.Sprite(r1mobs)
+mob14 = pygame.sprite.Sprite(r1mobs)
+mob15 = pygame.sprite.Sprite(r1mobs)
+mob16 = pygame.sprite.Sprite(r1mobs)
 mob11.image = row1sp1
 mob12.image = row1sp1
 mob13.image = row1sp1
@@ -841,12 +698,12 @@ mob16.rect = mob16.image.get_rect()
 
 row2sp1 = load_image('mob2.png')
 row2sp2 = load_image('mob22.png')
-mob21 = pygame.sprite.Sprite(mobs)
-mob22 = pygame.sprite.Sprite(mobs)
-mob23 = pygame.sprite.Sprite(mobs)
-mob24 = pygame.sprite.Sprite(mobs)
-mob25 = pygame.sprite.Sprite(mobs)
-mob26 = pygame.sprite.Sprite(mobs)
+mob21 = pygame.sprite.Sprite(r2mobs)
+mob22 = pygame.sprite.Sprite(r2mobs)
+mob23 = pygame.sprite.Sprite(r2mobs)
+mob24 = pygame.sprite.Sprite(r2mobs)
+mob25 = pygame.sprite.Sprite(r2mobs)
+mob26 = pygame.sprite.Sprite(r2mobs)
 mob21.image = row2sp1
 mob22.image = row2sp1
 mob23.image = row2sp1
@@ -862,12 +719,12 @@ mob26.rect = mob26.image.get_rect()
 
 row3sp1 = load_image('mob3.png')
 row3sp2 = load_image('mob32.png')
-mob31 = pygame.sprite.Sprite(mobs)
-mob32 = pygame.sprite.Sprite(mobs)
-mob33 = pygame.sprite.Sprite(mobs)
-mob34 = pygame.sprite.Sprite(mobs)
-mob35 = pygame.sprite.Sprite(mobs)
-mob36 = pygame.sprite.Sprite(mobs)
+mob31 = pygame.sprite.Sprite(r3mobs)
+mob32 = pygame.sprite.Sprite(r3mobs)
+mob33 = pygame.sprite.Sprite(r3mobs)
+mob34 = pygame.sprite.Sprite(r3mobs)
+mob35 = pygame.sprite.Sprite(r3mobs)
+mob36 = pygame.sprite.Sprite(r3mobs)
 mob31.image = row3sp1
 mob32.image = row3sp1
 mob33.image = row3sp1
@@ -905,7 +762,6 @@ ship_piu.rect = ship.image.get_rect()
 # l.upd()
 # l.show()
 # sys.exit(app.exec())
-
 
 start_screen()
 enter_name(screen)
