@@ -14,7 +14,7 @@ from random import randint
 p_name = 'DEFAULT PLAYER'
 best_score = 0
 now_score = -10
-wave = 0
+wave = 8
 FPS = 60
 SIZE = W, H = 450, 750
 buttons = pygame.sprite.Group()
@@ -35,6 +35,7 @@ pal = False
 mpal = False
 def_chance = 201
 volume = 1.0
+mpsp = 3
 
 
 class Leaderboard(QWidget):  # Окно с таблицей лидеров
@@ -236,7 +237,7 @@ def enter_name():
 
 
 def game_start():
-    global status, wave, now_score, pal, mpal, def_chance
+    global status, wave, now_score, pal, mpal, def_chance, mpsp
     pygame.display.set_caption('Space Invaders Rebuild')
     screen.fill((225, 225, 225))
     status = 'g'
@@ -245,7 +246,7 @@ def game_start():
     def_chance = 201
     ig_music = 'data/r8bit.mp3'
     pygame.mixer.music.load(ig_music)
-    pygame.mixer.music.play()
+    pygame.mixer.music.play(-1)
     pygame.mixer.music.set_volume(volume)
 
     running = True
@@ -255,20 +256,30 @@ def game_start():
             frame += 1
             if wave == 1 and frame == 1:
                 mobs_move()
-            if wave == 2 and (frame == 1 or frame == 31):
+            elif wave == 2 and (frame == 1 or frame == 31):
                 mobs_move()
-            if wave == 3 and (frame == 1 or frame == 21 or frame == 41):
+            elif wave == 3 and (frame == 1 or frame == 21 or frame == 41):
                 mobs_move()
-            if wave == 4 and (frame == 1 or frame == 16 or frame == 21 or frame == 36):
+            elif wave == 4 and (frame == 1 or frame == 16 or frame == 21 or frame == 36):
                 mobs_move()
-            if wave == 5 and (frame == 1 or frame == 13 or frame == 25 or frame == 37 or frame == 49):
+            elif wave == 5 and (frame == 1 or frame == 13 or frame == 25 or frame == 37 or frame == 49):
                 mobs_move()
-            if 6 <= wave < 10 and (frame == 1 or frame == 11 or frame == 21 or frame == 31 or frame == 41 or
-                                   frame == 51):
+            elif 6 <= wave < 10 and (frame == 1 or frame == 11 or frame == 21 or frame == 31 or frame == 41 or
+                                     frame == 51):
                 mobs_move()
-            if wave >= 10 and (frame == 1 or frame == 7 or frame == 13 or frame == 19 or frame == 25 or frame == 31 or
-                               frame == 37 or frame == 43 or frame == 49 or frame == 55):
+            elif 10 <= wave <= 11 and (frame == 1 or frame == 7 or frame == 13 or frame == 19 or frame == 25 or
+                                       frame == 31 or frame == 37 or frame == 43 or frame == 49 or frame == 55):
                 mobs_move()
+            elif 12 <= wave <= 14 and (frame == 5 or frame == 10 or frame == 15 or frame == 20 or
+                                                             frame == 25 or frame == 30 or frame == 35 or frame == 40 or
+                                                             frame == 45 or frame == 50 or
+                                                             frame == 55 or frame == 60):
+                mobs_move()
+            elif wave >= 15 and (frame == 4 or frame == 8 or frame == 12 or frame == 16 or frame == 20 or frame == 24 or
+                                 frame == 28 or frame == 32 or frame == 36 or frame == 40 or frame == 44 or
+                                 frame == 48 or frame == 52 or frame == 56 or frame == 60):
+                mobs_move()
+
         else:
             frame = 0
 
@@ -314,7 +325,7 @@ def game_start():
             if tr == 1:
                 mob_pif()
         else:
-            mob_piu.rect.top += 3
+            mob_piu.rect.top += mpsp
             check_mob_hit()
             if frame == 1:
                 mob_piu.image = bullet_im3
@@ -386,21 +397,18 @@ def check_lose():
     for mob in r1mobs:
         if alive[0][i]:
             if mob.rect.top >= 686:
-                print('через чек')
                 you_lose()
         i += 1
     i = 0
     for mob in r2mobs:
         if alive[0][i]:
             if mob.rect.top >= 686:
-                print('через чек')
                 you_lose()
         i += 1
     i = 0
     for mob in r3mobs:
         if alive[0][i]:
             if mob.rect.top >= 686:
-                print('через чек')
                 you_lose()
         i += 1
 
@@ -485,10 +493,14 @@ def ship_move_left():
 
 
 def new_wave():
-    global alive, r1mobs, r2mobs, r3mobs, def_chance
+    global alive, r1mobs, r2mobs, r3mobs, def_chance, mpsp
     global wave, best_score, now_score, row1sp1, row2sp1, row3sp1, tickn
     wave += 1
     tickn = 1
+    if 5 <= wave < 10:
+        mpsp = 5
+    elif wave >= 10:
+        mpsp = 6
     if def_chance > 10:
         def_chance - 20
 
