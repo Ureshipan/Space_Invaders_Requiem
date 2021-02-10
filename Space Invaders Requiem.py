@@ -34,6 +34,7 @@ alive = [[False, False, False, False, False, False], [False, False, False, False
 pal = False
 mpal = False
 def_chance = 201
+volume = 1.0
 
 
 class Leaderboard(QWidget):  # Окно с таблицей лидеров
@@ -107,23 +108,62 @@ def terminate():
     sys.exit()
 
 
+def intro():
+    global status
+    status = 'i'
+    men_music = 'data/rb8bit.mp3'
+    pygame.mixer.music.load(men_music)
+    pygame.mixer.music.play()
+    pygame.mixer.music.set_volume(volume)
+    for i in range(24):
+        fon = load_image('intro/{}.png'.format(i))
+        screen.blit(fon, (0, 0))
+        pygame.display.flip()
+        clock.tick(10)
+    start_screen()
+
+
+def settings():
+    global volume
+    print('sett')
+    sfon = load_image('settings/1.png')
+    while True:
+        if volume == 1.0:
+            sfon = load_image('settings/0.png')
+        elif volume == 0.5:
+            sfon = load_image('settings/1.png')
+        else:
+            sfon = load_image('settings/2.png')
+        screen.blit(sfon, (0, 0))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if 86 <= event.pos[0] <= 120 and 290 <= event.pos[1] <= 356:
+                    volume = 0.0
+                elif 210 <= event.pos[0] <= 242 and 290 <= event.pos[1] <= 356:
+                    volume = 0.5
+                elif 330 <= event.pos[0] <= 362 and 290 <= event.pos[1] <= 356:
+                    volume = 1.0
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    start_screen()
+        pygame.mixer.music.set_volume(volume)
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
 def start_screen():
     global status
+    print('на старте')
     status = 'm'
-    def_music = 'data/8bit.mp3'
-    rare_music = 'data/original_starman.mp3'
-    attempt = randint(0, 10)
-    if attempt == 1:
-        pygame.mixer.music.load(rare_music)
-    else:
-        pygame.mixer.music.load(def_music)
-    pygame.mixer.music.play()
 
     fon = load_image('menu_fon.png')
     screen.blit(fon, (0, 0))
     black_fon = load_image('back.png')
 
     while True:
+        pygame.mixer.music.set_volume(volume)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
@@ -131,6 +171,9 @@ def start_screen():
                 if 138 <= event.pos[0] <= 324 and 441 <= event.pos[1] <= 534 and status == 'm':
                     screen.blit(black_fon, (0, 0))
                     enter_name()
+                elif 138 <= event.pos[0] <= 324 and 580 <= event.pos[1] <= 670 and status == 'm':
+                    screen.blit(black_fon, (0, 0))
+                    settings()
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -697,4 +740,4 @@ mob_piu.rect = mob_piu.image.get_rect()
 ship_piu.image = bullet_im1
 ship_piu.rect = ship.image.get_rect()
 
-start_screen()
+intro()
