@@ -246,6 +246,10 @@ def game_start():
     frame = 1
     aa = 0
     def_chance = 201
+    ig_music = 'data/r8bit.mp3'
+    pygame.mixer.music.load(ig_music)
+    pygame.mixer.music.play()
+    pygame.mixer.music.set_volume(volume)
 
     running = True
 
@@ -291,7 +295,7 @@ def game_start():
         r3mobs.draw(screen)
         if pal:
             ship_bullets.draw(screen)
-            ship_piu.rect.top -= 5
+            ship_piu.rect.top -= 4
             if frame == 1:
                 ship_piu.image = bullet_im1
             elif frame == 31:
@@ -432,8 +436,8 @@ def check_hit():
         i = 0
         for mob in r1mobs:
             if alive[0][i]:
-                if 0 < (ship_piu.rect.left + 22) - (mob.rect.left + 16) < 32:
-                    if 0 < (ship_piu.rect.top + 12) - (mob.rect.top + 32) < 25:
+                if 0 < abs(ship_piu.rect.midtop[0] - mob.rect.midtop[0]) < 16:
+                    if 0 < abs((ship_piu.rect.top + 12) - (mob.rect.top + 32)) < 25:
                         mob.image = ded
                         alive[0][i] = False
                         pal = False
@@ -442,8 +446,8 @@ def check_hit():
         i = 0
         for mob in r2mobs:
             if alive[1][i]:
-                if 0 < (ship_piu.rect.left + 22) - (mob.rect.left + 16) < 46:
-                    if 0 < (ship_piu.rect.top + 12) - (mob.rect.top + 32) < 25:
+                if 0 < abs(ship_piu.rect.midtop[0] - mob.rect.midtop[0]) < 24:
+                    if 0 < abs((ship_piu.rect.top + 12) - (mob.rect.top + 32)) < 25:
                         mob.image = ded
                         alive[1][i] = False
                         pal = False
@@ -452,15 +456,15 @@ def check_hit():
         i = 0
         for mob in r3mobs:
             if alive[2][i]:
-                if 0 < (ship_piu.rect.left + 22) - (mob.rect.left + 16) < 50:
-                    if 0 < (ship_piu.rect.top + 12) - (mob.rect.top + 32) < 25:
+                if 0 < abs(ship_piu.rect.midtop[0] - mob.rect.midtop[0]) < 24:
+                    if 0 < abs((ship_piu.rect.top + 12) - (mob.rect.top + 32)) < 25:
                         mob.image = ded
                         alive[2][i] = False
                         pal = False
                         now_score += 1
             i += 1
         if mpal:
-            if 0 < abs((ship_piu.rect.left + 21) - (mob_piu.rect.left + 21)) < 6:
+            if 0 < abs(ship_piu.rect.midtop[0] - mob_piu.rect.midtop[0]) < 6:
                 if 0 < abs((ship_piu.rect.top + 12) - (mob_piu.rect.top + 12)) < 25:
                     pal = False
                     mpal = False
@@ -470,13 +474,13 @@ def check_hit():
 def ship_move_right():
     global ships
     if ship.rect[0] < 400:
-        ship.rect.left += 5
+        ship.rect.left += 3
 
 
 def ship_move_left():
     global ships
     if ship.rect[0] > 2:
-        ship.rect.left -= 5
+        ship.rect.left -= 3
 
 
 def new_wave():
