@@ -14,7 +14,7 @@ from random import randint
 p_name = 'DEFAULT PLAYER'
 best_score = 0
 now_score = -10
-wave = 10
+wave = 0
 FPS = 60
 SIZE = W, H = 450, 750
 buttons = pygame.sprite.Group()
