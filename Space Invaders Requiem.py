@@ -311,7 +311,7 @@ def game_start():
         aa = 0
         if not mpal:
             tr = randint(1, def_chance)
-            if tr == 50:
+            if tr == 1:
                 mob_pif()
         else:
             mob_piu.rect.top += 3
