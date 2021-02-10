@@ -125,8 +125,6 @@ def intro():
 
 def settings():
     global volume
-    print('sett')
-    sfon = load_image('settings/1.png')
     while True:
         if volume == 1.0:
             sfon = load_image('settings/0.png')
@@ -155,7 +153,6 @@ def settings():
 
 def start_screen():
     global status
-    print('на старте')
     status = 'm'
 
     fon = load_image('menu_fon.png')
@@ -426,6 +423,10 @@ def you_lose():
         lead = Leaderboard()
         lead.upd()
         lead.show()
+        men_music = 'data/rb8bit.mp3'
+        pygame.mixer.music.load(men_music)
+        pygame.mixer.music.play()
+        pygame.mixer.music.set_volume(volume)
         start_screen()
         sys.exit(app.exec())
 
@@ -490,8 +491,6 @@ def new_wave():
     tickn = 1
     if def_chance > 10:
         def_chance - 20
-
-    print('Волна пошла')
 
     ship_piu.rect.topleft = (1000, 1000)
 
